@@ -1,9 +1,18 @@
 #include <boost/test/unit_test.hpp>
 
+#include <fstream>
 #include <string>
+#include <locale>
 #include <cyclone/core/TextBuffer.h>
+#include <utf8/utf8.h>
 
 using namespace cyclone :: core;
+
+std::string convert (const std::u16string & input) {
+	std::string result;
+	utf8::utf16to8 (input.begin (), input.end (), back_inserter (result));
+	return result;
+}
 
 bool assertTextBufferContent (const TextBuffer & buffer, const char16_t * content) {
 	std::u16string s (content);
@@ -104,19 +113,19 @@ BOOST_AUTO_TEST_CASE (testReplace) {
 	TextBuffer original (u"abcd12345678efgh");
 	TextBuffer replaced = original.splice (6, 4, u"xxxx");
 
-	BOOST_CHECK (assertTextBufferContent (replaced, u"abcd12xxxx78efgh"));
+	BOOST_CHECK_MESSAGE (assertTextBufferContent (replaced, u"abcd12xxxx78efgh"), convert (replaced.toString ()));
 
 	TextBuffer replaced2 = replaced.splice (4, 4, u"ABCD");
 
-	BOOST_CHECK (assertTextBufferContent (replaced2, u"abcdABCDxx78efgh"));
+	BOOST_CHECK_MESSAGE (assertTextBufferContent (replaced2, u"abcdABCDxx78efgh"), convert (replaced2.toString ()));
 
 	TextBuffer replaced3 = replaced2.splice (0, 1, u"ZZ");
 
-	BOOST_CHECK (assertTextBufferContent (replaced3, u"ZZbcdABCDxx78efgh"));
+	BOOST_CHECK_MESSAGE (assertTextBufferContent (replaced3, u"ZZbcdABCDxx78efgh"), convert (replaced3.toString ()));
 
 	TextBuffer replaced4 = replaced3.splice (replaced3.length () - 1, 1, u"YY");
 
-	BOOST_CHECK (assertTextBufferContent (replaced4, u"ZZbcdABCDxx78efgYY"));
+	BOOST_CHECK_MESSAGE (assertTextBufferContent (replaced4, u"ZZbcdABCDxx78efgYY"), convert (replaced4.toString ()));
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

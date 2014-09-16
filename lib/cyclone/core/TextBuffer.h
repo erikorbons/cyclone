@@ -17,6 +17,7 @@ namespace internal {
 		virtual bool isNode () const = 0;
 		virtual std::size_t length () const = 0;
 		virtual char16_t operator[] (std::size_t index) const = 0;
+		virtual std::u16string toString () const = 0;
 	};
 
 	class TextBufferSpan : public TextBufferNodeBase {
@@ -41,6 +42,14 @@ namespace internal {
 
 		virtual char16_t operator[] (std::size_t index) const {
 			return m_value[index];
+		}
+
+		const std::u16string value () const {
+			return m_value;
+		}
+
+		virtual std::u16string toString () const {
+			return m_value;
 		}
 
 	private:
@@ -75,6 +84,18 @@ namespace internal {
 			} else {
 				return (*m_right)[index - leftLength];
 			}
+		}
+
+		const std::shared_ptr<TextBufferNodeBase> & left () const {
+			return m_left;
+		}
+
+		const std::shared_ptr<TextBufferNodeBase> & right () const {
+			return m_right;
+		}
+
+		virtual std::u16string toString () const {
+			return m_left->toString () + m_right->toString ();
 		}
 
 	private:
@@ -113,10 +134,37 @@ public:
 
 	TextBuffer splice (std::size_t offset, std::size_t length, const std::u16string & replacement) const;
 
+	std::u16string toString () const {
+		return m_root->toString ();
+	}
+
 private:
+
+	const std::size_t	splitThreshold = 2;// 128;
+
+	struct FindNode {
+		FindNode (
+				const std::shared_ptr<Span> & beforeNode,
+				const std::shared_ptr<Span> & afterNode,
+				std::size_t beforeOffset,
+				std::size_t afterOffset)
+				: m_beforeNode (beforeNode),
+				  m_afterNode (afterNode),
+				  m_beforeOffset (beforeOffset),
+				  m_afterOffset (afterOffset) {
+		}
+
+		std::shared_ptr<Span>	m_beforeNode;
+		std::shared_ptr<Span>	m_afterNode;
+		std::size_t				m_beforeOffset;
+		std::size_t				m_afterOffset;
+	};
 
 	TextBuffer (const std::shared_ptr<NodeBase> & root) : m_root (root) {
 	}
+
+	FindNode findNode (std::size_t offset) const;
+	std::shared_ptr<NodeBase> spliceInNode (const std::shared_ptr<NodeBase> & node, std::size_t offset, std::size_t length, const std::u16string & replacement) const;
 
 	std::shared_ptr<NodeBase>	m_root;
 };
