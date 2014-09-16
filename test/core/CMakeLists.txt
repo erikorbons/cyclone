@@ -1,7 +1,10 @@
 enable_testing ()
 
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+
 add_executable (TestCore TestCore.cc)
 
-target_link_libraries(TestCore ${LIBS})
+target_link_libraries(TestCore ${LIBS} ${CycloneTest} ${Boost_LIBRARIES})
 
-add_test (TestCore ${EXECUTABLE_OUTPUT_PATH}/TestCore)
+add_test (TestCore ${RUNTIME_OUTPUT_DIRECTORY}/TestCore)

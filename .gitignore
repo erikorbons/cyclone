@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+/build/
+/cyclone.kdev4
+/.kdev4/
+/.project

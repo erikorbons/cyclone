@@ -27,13 +27,10 @@ configure_file (
 include_directories ("${PROJECT_BINARY_DIR}")
 include_directories ("${PROJECT_SOURCE_DIR}")
 
-# Redirect output:
-set (EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE INTERNAL "" FORCE)
-set (LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib" CACHE INTERNAL "" FORCE)
-
 # Enable testing for this project:
 enable_testing ()
 
+include_directories ("${PROJECT_SOURCE_DIR}/lib")
 # ------------------
 # Compiler features:
 # ------------------
@@ -55,6 +52,11 @@ endif ()
 # External dependencies:
 # ----------------------
 # set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules")
+
+# --------
+# Testing:
+# --------
+find_package (Boost REQUIRED unit_test_framework)
 
 # ---------------
 # Subdirectories:
