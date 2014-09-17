@@ -11,13 +11,24 @@ namespace internal {
 	class TextBufferNodeBase {
 	public:
 
-		virtual ~TextBufferNodeBase () { }
+#ifdef TEXTBUFFER_DEBUG
+		TextBufferNodeBase () { ++ m_nodeCount; }
+#endif
+		virtual ~TextBufferNodeBase () {
+#ifdef TEXTBUFFER_DEBUG
+			-- m_nodeCount;
+#endif
+		}
 
 		virtual bool isSpan () const = 0;
 		virtual bool isNode () const = 0;
 		virtual std::size_t length () const = 0;
 		virtual char16_t operator[] (std::size_t index) const = 0;
 		virtual std::u16string toString () const = 0;
+
+#ifdef TEXTBUFFER_DEBUG
+		static int m_nodeCount;
+#endif
 	};
 
 	class TextBufferSpan : public TextBufferNodeBase {
