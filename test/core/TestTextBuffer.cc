@@ -154,4 +154,32 @@ BOOST_AUTO_TEST_CASE (testReplace) {
 	BOOST_CHECK (cyclone::core::internal::TextBufferNodeBase::m_nodeCount == 0);
 }
 
+BOOST_AUTO_TEST_CASE (testIterator) {
+	TextBuffer original (u"abcdefghijklmnop");
+	TextBuffer::Iterator it;
+	TextBuffer::Iterator end = original.end ();
+	int i;
+
+	for (it = original.begin (), i = 0; it != end; ++ it, ++ i) {
+		BOOST_CHECK (*it == original.toString ()[i]);
+	}
+
+	for (char16_t v: original) {
+		BOOST_CHECK (v != 0);
+	}
+
+	TextBuffer spliced = original
+		.splice (1, 2, u"123")
+		.splice (2, 5, u"45678")
+		.splice (10, 3, u"90");
+
+	for (it = spliced.begin (), i = 0; it != spliced.end (); ++ it, ++ i) {
+		BOOST_CHECK (*it == spliced.toString ()[i]);
+	}
+
+	for (char16_t v: spliced) {
+		BOOST_CHECK (v != 0);
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END ()

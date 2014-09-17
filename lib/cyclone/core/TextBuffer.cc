@@ -157,5 +157,26 @@ namespace core {
 		);
 	}
 
+	void TextBufferIterator :: setOffset (std::size_t offset) {
+		std::shared_ptr<NodeBase> currentNode = m_buffer->m_root;
+		std::size_t currentOffset = offset;
+
+		while (!currentNode->isSpan ()) {
+			std::shared_ptr<Node> node = std::static_pointer_cast<Node> (currentNode);
+			std::size_t leftLength = node->left ()->length ();
+
+			if (currentOffset < leftLength) {
+				currentNode = node->left ();
+			} else {
+				currentNode = node->right ();
+				currentOffset -= leftLength;
+			}
+		}
+
+		m_currentSpan = std::static_pointer_cast<Span> (currentNode).get ();
+		m_spanOffset = currentOffset;
+		m_offset = offset;
+	}
+
 } // namespace core
 } // namespace cyclone

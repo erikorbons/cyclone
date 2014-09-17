@@ -121,6 +121,8 @@ namespace internal {
 
 }
 
+class TextBufferIterator;
+
 class TextBuffer {
 private:
 
@@ -129,6 +131,8 @@ private:
 	typedef internal::TextBufferSpan		Span;
 
 public:
+
+	typedef TextBufferIterator				Iterator;
 
 	TextBuffer () : m_root (std::make_shared<Span> (u"")) {
 
@@ -152,31 +156,18 @@ public:
 	TextBuffer append (const TextBuffer & other) const;
 	TextBuffer remove (std::size_t offset, std::size_t length) const;
 
+	TextBufferIterator begin () const;
+	TextBufferIterator end () const;
+
 	std::u16string toString () const {
 		return m_root->toString ();
 	}
 
 private:
 
+	friend class TextBufferIterator;
+
 	const std::size_t	maxStringLength = 512;
-
-	struct FindNode {
-		FindNode (
-				const std::shared_ptr<Span> & beforeNode,
-				const std::shared_ptr<Span> & afterNode,
-				std::size_t beforeOffset,
-				std::size_t afterOffset)
-				: m_beforeNode (beforeNode),
-				  m_afterNode (afterNode),
-				  m_beforeOffset (beforeOffset),
-				  m_afterOffset (afterOffset) {
-		}
-
-		std::shared_ptr<Span>	m_beforeNode;
-		std::shared_ptr<Span>	m_afterNode;
-		std::size_t				m_beforeOffset;
-		std::size_t				m_afterOffset;
-	};
 
 	struct Split {
 		Split (const std::shared_ptr<NodeBase> & left, const std::shared_ptr<NodeBase> & right)
@@ -197,6 +188,91 @@ private:
 
 	std::shared_ptr<NodeBase>	m_root;
 };
+
+class TextBufferIterator {
+private:
+
+	typedef internal::TextBufferNodeBase	NodeBase;
+	typedef internal::TextBufferNode		Node;
+	typedef internal::TextBufferSpan		Span;
+
+public:
+
+	TextBufferIterator () : m_buffer (0), m_currentSpan (0), m_offset (0), m_spanOffset (0) {
+	}
+
+	TextBufferIterator (const TextBuffer & buffer, std::size_t offset) : m_buffer (&buffer) {
+		setOffset (offset);
+	}
+
+	TextBufferIterator & operator ++ () { updateOffset (1); return *this; }
+	TextBufferIterator operator ++ (int) { TextBufferIterator copy (*this); ++ copy; return copy; }
+
+	TextBufferIterator & operator = (const TextBufferIterator & other) {
+		m_buffer = other.m_buffer;
+		m_currentSpan = other.m_currentSpan;
+		m_offset = other.m_offset;
+		m_spanOffset = other.m_spanOffset;
+		return *this;
+	}
+
+	bool operator == (const TextBufferIterator & other) const {
+		return m_buffer->m_root == other.m_buffer->m_root && m_offset == other.m_offset;
+	}
+
+	bool operator != (const TextBufferIterator & other) const {
+		return !((*this) == other);
+	}
+
+	bool operator < (const TextBufferIterator & other) const {
+		return m_offset < other.m_offset;
+	}
+
+	bool operator <= (const TextBufferIterator & other) const {
+		return m_offset <= other.m_offset;
+	}
+
+	bool operator > (const TextBufferIterator & other) const {
+		return m_offset > other.m_offset;
+	}
+
+	bool operator >= (const TextBufferIterator & other) const {
+		return m_offset >= other.m_offset;
+	}
+
+	char16_t operator * () const {
+		return m_currentSpan->value ()[m_spanOffset];
+	}
+
+private:
+
+	void setOffset (std::size_t offset);
+
+	void updateOffset (int delta) {
+		// Navigate to a new span:
+		if (signed (m_spanOffset) + delta < 0 || signed (m_spanOffset) + delta >= signed (m_currentSpan->length ())) {
+			setOffset (m_offset + delta);
+			return;
+		}
+
+		// Navigate within the current span:
+		m_offset += delta;
+		m_spanOffset += delta;
+	}
+
+	const TextBuffer *	m_buffer;
+	const Span *		m_currentSpan;
+	std::size_t			m_offset;
+	std::size_t			m_spanOffset;
+};
+
+inline TextBuffer::Iterator TextBuffer :: begin () const {
+	return Iterator (*this, 0);
+}
+
+inline TextBuffer::Iterator TextBuffer :: end () const {
+	return Iterator (*this, length ());
+}
 
 } // namespace core
 } // namespace cyclone
