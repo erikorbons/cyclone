@@ -76,6 +76,10 @@ namespace internal {
 			return m_left->length () + m_right->length ();
 		}
 
+		std::size_t leftLength () const {
+			return m_left->length ();
+		}
+
 		virtual char16_t operator[] (std::size_t index) const {
 			std::size_t leftLength = m_left->length ();
 
@@ -120,7 +124,7 @@ public:
 	}
 
 	TextBuffer (const std::u16string & value)
-		: m_root (std::make_shared<Span> (value)){
+		: m_root (makeSpan (value)){
 
 	}
 
@@ -133,6 +137,9 @@ public:
 	}
 
 	TextBuffer splice (std::size_t offset, std::size_t length, const std::u16string & replacement) const;
+	TextBuffer insert (std::size_t offset, const std::u16string & text) const;
+	TextBuffer append (const TextBuffer & other) const;
+	TextBuffer remove (std::size_t offset, std::size_t length) const;
 
 	std::u16string toString () const {
 		return m_root->toString ();
@@ -140,7 +147,7 @@ public:
 
 private:
 
-	const std::size_t	splitThreshold = 2;// 128;
+	const std::size_t	maxStringLength = 512;
 
 	struct FindNode {
 		FindNode (
@@ -160,11 +167,22 @@ private:
 		std::size_t				m_afterOffset;
 	};
 
+	struct Split {
+		Split (const std::shared_ptr<NodeBase> & left, const std::shared_ptr<NodeBase> & right)
+			: m_left (left), m_right (right) {
+		}
+
+		std::shared_ptr<NodeBase>	m_left;
+		std::shared_ptr<NodeBase>	m_right;
+	};
+
 	TextBuffer (const std::shared_ptr<NodeBase> & root) : m_root (root) {
 	}
 
-	FindNode findNode (std::size_t offset) const;
-	std::shared_ptr<NodeBase> spliceInNode (const std::shared_ptr<NodeBase> & node, std::size_t offset, std::size_t length, const std::u16string & replacement) const;
+	Split split (const std::shared_ptr<NodeBase> & node, std::size_t offset) const;
+	Split combineSplitLeft (const std::shared_ptr<NodeBase> & a, const std::shared_ptr<NodeBase> & b, const std::shared_ptr<NodeBase> & c) const;
+	Split combineSplitRight (const std::shared_ptr<NodeBase> & a, const std::shared_ptr<NodeBase> & b, const std::shared_ptr<NodeBase> & c) const;
+	std::shared_ptr<NodeBase> makeSpan (const std::u16string & value) const;
 
 	std::shared_ptr<NodeBase>	m_root;
 };
