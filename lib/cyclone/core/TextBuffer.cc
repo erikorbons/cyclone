@@ -56,14 +56,27 @@ namespace core {
 	}
 
 	TextBuffer TextBuffer :: append (const TextBuffer & other) const {
-		return TextBuffer (
-			std::static_pointer_cast<NodeBase> (
-				std::make_shared<Node> (
-					m_root,
-					other.m_root
-				)
-			)
+		std::shared_ptr<Node> newRoot = std::make_shared<Node> (
+			m_root,
+			other.m_root
 		);
+
+		while (true) {
+			int leftDepth = newRoot->left ()->depth ();
+			int rightDepth = newRoot->right ()->depth ();
+
+			if (rightDepth - leftDepth >= 2) {
+				// Right is deeper than left:
+				newRoot = rotateLeft (newRoot);
+			} else if (leftDepth - rightDepth >= 2) {
+				// Left is deeper than right:
+				newRoot = rotateRight (newRoot);
+			} else {
+				break;
+			}
+		}
+
+		return TextBuffer (std::static_pointer_cast<NodeBase> (newRoot));
 	}
 
 	TextBuffer TextBuffer :: remove (std::size_t offset, std::size_t length) const {
@@ -154,6 +167,44 @@ namespace core {
 				makeSpan (value.substr (0, value.length () / 2)),
 				makeSpan (value.substr (value.length () / 2))
 			)
+		);
+	}
+
+	std::shared_ptr<TextBuffer::Node> TextBuffer :: rotateLeft (const std::shared_ptr<Node> node) const {
+		// Cannot rotate left if there is a span at the right:
+		if (node->right ()->isSpan ()) {
+			return node;
+		}
+
+		std::shared_ptr<Node> right = std::static_pointer_cast<Node> (node->right ());
+
+		std::shared_ptr<Node> newLeft = std::make_shared<Node> (
+			node->left (),
+			right->left ()
+		);
+
+		return std::make_shared<Node> (
+			newLeft,
+			right->right ()
+		);
+	}
+
+	std::shared_ptr<TextBuffer::Node> TextBuffer :: rotateRight (const std::shared_ptr<Node> node) const {
+		// Cannot rotate right if there is a span at the left:
+		if (node->left ()->isSpan ()) {
+			return node;
+		}
+
+		std::shared_ptr<Node> left = std::static_pointer_cast<Node> (node->left ());
+
+		std::shared_ptr<Node> newRight = std::make_shared<Node> (
+			left->right (),
+			node->right ()
+		);
+
+		return std::make_shared<Node> (
+			left->left (),
+			newRight
 		);
 	}
 

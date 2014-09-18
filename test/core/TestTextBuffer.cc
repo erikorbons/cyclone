@@ -103,6 +103,8 @@ BOOST_AUTO_TEST_CASE (testInsert) {
 		TextBuffer inserted3 = inserted2.splice (10, 0, u"xx");
 
 		BOOST_CHECK_MESSAGE (assertTextBufferContent (inserted3, u"abcd123456xx78efgh"), convert (inserted3.toString ()));
+
+		BOOST_CHECK (inserted3.isBalanced ());
 	}
 
 	BOOST_CHECK (cyclone::core::internal::TextBufferNodeBase::m_nodeCount == 0);
@@ -181,5 +183,22 @@ BOOST_AUTO_TEST_CASE (testIterator) {
 		BOOST_CHECK (v != 0);
 	}
 }
+
+BOOST_AUTO_TEST_CASE (testBalanceAppend) {
+	{
+		TextBuffer buffer (u"abc");
+
+		for (int i = 0; i < 100; ++ i) {
+			buffer = buffer.append (TextBuffer (u"abc"));
+			BOOST_CHECK (buffer.isBalanced ());
+			if (i > 2) {
+				BOOST_CHECK (buffer.depth () < i);
+			}
+		}
+	}
+
+	BOOST_CHECK (cyclone::core::internal::TextBufferNodeBase::m_nodeCount == 0);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END ()

@@ -25,6 +25,7 @@ namespace internal {
 		virtual std::size_t length () const = 0;
 		virtual char16_t operator[] (std::size_t index) const = 0;
 		virtual std::u16string toString () const = 0;
+		virtual int depth () const = 0;
 
 #ifdef TEXTBUFFER_DEBUG
 		static int m_nodeCount;
@@ -57,6 +58,10 @@ namespace internal {
 
 		const std::u16string value () const {
 			return m_value;
+		}
+
+		virtual int depth () const {
+			return 1;
 		}
 
 		virtual std::u16string toString () const {
@@ -109,6 +114,13 @@ namespace internal {
 			return m_right;
 		}
 
+		virtual int depth () const {
+			int ld = m_left->depth ();
+			int rd = m_right->depth ();
+
+			return ld > rd ? ld : rd;
+		}
+
 		virtual std::u16string toString () const {
 			return m_left->toString () + m_right->toString ();
 		}
@@ -143,6 +155,11 @@ public:
 
 	}
 
+	TextBuffer & operator = (const TextBuffer & other) {
+		m_root = other.m_root;
+		return *this;
+	}
+
 	std::size_t length () const {
 		return m_root->length ();
 	}
@@ -158,6 +175,22 @@ public:
 
 	TextBufferIterator begin () const;
 	TextBufferIterator end () const;
+
+	bool isBalanced () const {
+		if (m_root->isSpan ()) {
+			return true;
+		}
+
+		std::shared_ptr<Node> node = std::static_pointer_cast<Node> (m_root);
+		int ld = node->left ()->depth ();
+		int rd = node->right ()->depth ();
+
+		return ld == rd || ld - rd == 1 || rd - ld == 1;
+	}
+
+	int depth () const {
+		return m_root->depth ();
+	}
 
 	std::u16string toString () const {
 		return m_root->toString ();
@@ -185,6 +218,8 @@ private:
 	Split combineSplitLeft (const std::shared_ptr<NodeBase> & a, const std::shared_ptr<NodeBase> & b, const std::shared_ptr<NodeBase> & c) const;
 	Split combineSplitRight (const std::shared_ptr<NodeBase> & a, const std::shared_ptr<NodeBase> & b, const std::shared_ptr<NodeBase> & c) const;
 	std::shared_ptr<NodeBase> makeSpan (const std::u16string & value) const;
+	std::shared_ptr<Node> rotateLeft (const std::shared_ptr<Node> n) const;
+	std::shared_ptr<Node> rotateRight (const std::shared_ptr<Node> n) const;
 
 	std::shared_ptr<NodeBase>	m_root;
 };
