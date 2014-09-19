@@ -180,7 +180,14 @@ BOOST_AUTO_TEST_CASE (testDecimal) {
 }
 
 BOOST_AUTO_TEST_CASE (testHex) {
-	BOOST_CHECK (false);
+	Lexer l = mkLexer (u"  0xd3AdB33f  ");
+
+	BOOST_CHECK (l.check (TokenType::WHITESPACE, 0));
+	BOOST_CHECK (l.la (0).length () == 2);
+	BOOST_CHECK (l.check (TokenType::HEX_CONSTANT, 1));
+	BOOST_CHECK (l.la (1).length () == 10);
+	BOOST_CHECK (l.check (TokenType::WHITESPACE, 2));
+	BOOST_CHECK (l.la (2).length () == 2);
 }
 
 

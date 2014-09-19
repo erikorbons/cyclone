@@ -15,6 +15,10 @@ namespace parser {
 		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 	}
 
+	bool isHexDigit (char16_t c) {
+		return isDigit (c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+	}
+
 	struct StringTokenPair {
 		std::u16string	name;
 		TokenType		tokenType;
@@ -174,9 +178,22 @@ namespace parser {
 			return;
 		}
 
-		// Parse decimal numbers:
-
 		// Parse hex numbers:
+		if (m_scanner.la (0) == '0'
+				&& (m_scanner.la (1) == 'x' || m_scanner.la (1) == 'X')
+				&& isHexDigit (m_scanner.la (2))) {
+			emit (parseHex ());
+			return;
+		}
+
+		// Parse decimal numbers:
+		if (isDigit (m_scanner.la (0))
+				|| (m_scanner.la (0) == '-' && isDigit (m_scanner.la (1)))
+				|| (m_scanner.la (0) == '-' && m_scanner.la (1) == '.' && isDigit (m_scanner.la (2)))
+				|| (m_scanner.la (0) == '.' && isDigit (m_scanner.la (1)))) {
+			emit (parseDecimal ());
+			return;
+		}
 
 		// Parse quoted names:
 		if (m_scanner.la (0) == '`') {
@@ -288,6 +305,23 @@ namespace parser {
 		}
 
 		return Token (tokenType, length);
+	}
+
+	Token Lexer :: parseDecimal () {
+
+	}
+
+	Token Lexer :: parseHex () {
+		std::size_t length = 2;
+		m_scanner.accept ();
+		m_scanner.accept ();
+
+		while (isHexDigit (m_scanner.la ())) {
+			++ length;
+			m_scanner.accept ();
+		}
+
+		return Token (TokenType::HEX_CONSTANT, length);
 	}
 
 }	// namespace parser

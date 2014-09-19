@@ -114,6 +114,8 @@ private:
 	void emit (const Token & token);
 
 	Token parseString (TokenType tokenType);
+	Token parseDecimal ();
+	Token parseHex ();
 
 	internal::Scanner	m_scanner;
 	std::vector<Token>	m_lookahead;
