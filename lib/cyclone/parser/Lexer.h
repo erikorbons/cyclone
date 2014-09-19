@@ -52,12 +52,14 @@ namespace internal {
 			return m_lookahead[offset];
 		}
 
-		void accept () {
+		char16_t accept () {
 			// Make sure there is at least one character to accept:
 			la ();
 
 			// Erase the first character:
+			char16_t v = m_lookahead[0];
 			m_lookahead.erase (m_lookahead.begin ());
+			return v;
 		}
 
 		bool check (char16_t ch, unsigned offset = 0) {
@@ -110,6 +112,8 @@ private:
 
 	void next ();
 	void emit (const Token & token);
+
+	Token parseString (TokenType tokenType);
 
 	internal::Scanner	m_scanner;
 	std::vector<Token>	m_lookahead;

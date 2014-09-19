@@ -34,6 +34,7 @@ enum class TokenType : unsigned char {
 	RIGHT_BRACKET,			// ]
 
 	INVERT,					// ~
+	INVERT_ASSIGN,			// ~=
 	NOT,					// !
 	MODULO,					// %
 	MODULO_ASSIGN,			// %=
@@ -41,6 +42,7 @@ enum class TokenType : unsigned char {
 	BIT_XOR_ASSIGN,			// ^=
 	LOGICAL_XOR,			// ^^
 	BIT_AND,				// &
+	LOGICAL_AND,			// &&
 	BIT_AND_ASSIGN,			// &=
 	MULTIPLY,				// *
 	MULTIPLY_ASSIGN,		// *=
@@ -73,7 +75,9 @@ enum class TokenError : unsigned char {
 	NO_ERROR = 0,
 
 	UNEXPECTED_CHARACTERS = 1,
-	UNTERMINATED_COMMENT = 2
+	UNTERMINATED_COMMENT = 2,
+	UNTERMINATED_CHARACTER_SEQUENCE = 3,	// Unterminated string, character or quoted name.
+	INVALID_CHARACTER_CONSTANT = 4			// Character too long.
 };
 
 class Token {
