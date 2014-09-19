@@ -46,6 +46,8 @@ BOOST_AUTO_TEST_CASE (testCreate) {
 
 		BOOST_CHECK (buffer2.length () == 13);
 		BOOST_CHECK (assertTextBufferContent (buffer2, u"Hello, World!"));
+
+		BOOST_CHECK (cyclone::core::internal::TextBufferNodeBase::m_nodeCount > 0);
 	}
 
 	BOOST_CHECK (cyclone::core::internal::TextBufferNodeBase::m_nodeCount == 0);

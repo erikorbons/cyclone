@@ -11,9 +11,12 @@ namespace internal {
 	class TextBufferNodeBase {
 	public:
 
+		TextBufferNodeBase () {
 #ifdef TEXTBUFFER_DEBUG
-		TextBufferNodeBase () { ++ m_nodeCount; }
+		++ m_nodeCount;
 #endif
+		}
+
 		virtual ~TextBufferNodeBase () {
 #ifdef TEXTBUFFER_DEBUG
 			-- m_nodeCount;
@@ -147,12 +150,13 @@ public:
 	typedef TextBufferIterator				Iterator;
 
 	TextBuffer () : m_root (std::make_shared<Span> (u"")) {
-
 	}
 
 	TextBuffer (const std::u16string & value)
 		: m_root (makeSpan (value)){
+	}
 
+	TextBuffer (const TextBuffer & other) : m_root (other.m_root) {
 	}
 
 	TextBuffer & operator = (const TextBuffer & other) {
@@ -175,6 +179,7 @@ public:
 
 	TextBufferIterator begin () const;
 	TextBufferIterator end () const;
+	TextBufferIterator at (std::size_t offset) const;
 
 	bool isBalanced () const {
 		if (m_root->isSpan ()) {
@@ -240,8 +245,9 @@ public:
 		setOffset (offset);
 	}
 
-	TextBufferIterator & operator ++ () { updateOffset (1); return *this; }
-	TextBufferIterator operator ++ (int) { TextBufferIterator copy (*this); ++ copy; return copy; }
+	TextBufferIterator (const TextBufferIterator & other)
+		: m_buffer (other.m_buffer), m_currentSpan (other.m_currentSpan), m_offset (other.m_offset), m_spanOffset (other.m_spanOffset) {
+	}
 
 	TextBufferIterator & operator = (const TextBufferIterator & other) {
 		m_buffer = other.m_buffer;
@@ -250,6 +256,9 @@ public:
 		m_spanOffset = other.m_spanOffset;
 		return *this;
 	}
+
+	TextBufferIterator & operator ++ () { updateOffset (1); return *this; }
+	TextBufferIterator operator ++ (int) { TextBufferIterator copy (*this); ++ copy; return copy; }
 
 	bool operator == (const TextBufferIterator & other) const {
 		return m_buffer->m_root == other.m_buffer->m_root && m_offset == other.m_offset;
@@ -277,6 +286,10 @@ public:
 
 	char16_t operator * () const {
 		return m_currentSpan->value ()[m_spanOffset];
+	}
+
+	std::size_t offset () const {
+		return m_offset;
 	}
 
 private:
@@ -308,6 +321,11 @@ inline TextBuffer::Iterator TextBuffer :: begin () const {
 inline TextBuffer::Iterator TextBuffer :: end () const {
 	return Iterator (*this, length ());
 }
+
+inline TextBuffer::Iterator TextBuffer :: at (std::size_t offset) const {
+	return Iterator (*this, offset);
+}
+
 
 } // namespace core
 } // namespace cyclone
