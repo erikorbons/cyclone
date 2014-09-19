@@ -175,6 +175,8 @@ BOOST_AUTO_TEST_CASE (testIterator) {
 		.splice (2, 5, u"45678")
 		.splice (10, 3, u"90");
 
+	BOOST_CHECK (spliced.isBalanced ());
+
 	for (it = spliced.begin (), i = 0; it != spliced.end (); ++ it, ++ i) {
 		BOOST_CHECK (*it == spliced.toString ()[i]);
 	}
