@@ -77,7 +77,8 @@ enum class TokenError : unsigned char {
 	UNEXPECTED_CHARACTERS = 1,
 	UNTERMINATED_COMMENT = 2,
 	UNTERMINATED_CHARACTER_SEQUENCE = 3,	// Unterminated string, character or quoted name.
-	INVALID_CHARACTER_CONSTANT = 4			// Character too long.
+	INVALID_CHARACTER_CONSTANT = 4,			// Character too long.
+	INVALID_NUMBER_FORMAT = 5
 };
 
 class Token {

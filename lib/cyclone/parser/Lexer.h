@@ -102,7 +102,7 @@ public:
 	}
 
 	Token la (unsigned offset = 0);
-	void accept ();
+	Token accept ();
 
 	bool check (TokenType tokenType, unsigned offset = 0) {
 		return la (offset).type () == tokenType;

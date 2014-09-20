@@ -176,7 +176,18 @@ BOOST_AUTO_TEST_CASE (testPunctuation) {
 }
 
 BOOST_AUTO_TEST_CASE (testDecimal) {
-	BOOST_CHECK (false);
+	Lexer l = mkLexer (u"  123 -42l 0.1 .1f 1.1e+03d  ");
+
+	BOOST_CHECK (l.check (TokenType::DECIMAL_CONSTANT, 1));
+	BOOST_CHECK (l.la (1).length () == 3);
+	BOOST_CHECK (l.check (TokenType::DECIMAL_CONSTANT, 3));
+	BOOST_CHECK (l.la (3).length () == 4);
+	BOOST_CHECK (l.check (TokenType::DECIMAL_CONSTANT, 5));
+	BOOST_CHECK (l.la (5).length () == 3);
+	BOOST_CHECK (l.check (TokenType::DECIMAL_CONSTANT, 7));
+	BOOST_CHECK (l.la (7).length () == 3);
+	BOOST_CHECK (l.check (TokenType::DECIMAL_CONSTANT, 9));
+	BOOST_CHECK (l.la (9).length () == 8);
 }
 
 BOOST_AUTO_TEST_CASE (testHex) {
@@ -229,6 +240,14 @@ BOOST_AUTO_TEST_CASE (testErrorInvalidCharacterConstant) {
 	BOOST_CHECK (l.check (TokenType::CHARACTER_CONSTANT, 0));
 	BOOST_CHECK (l.la (0).length () == 4);
 	BOOST_CHECK (l.la (0).error () == TokenError::INVALID_CHARACTER_CONSTANT);
+}
+
+BOOST_AUTO_TEST_CASE (testErrorInvalidNumberFormat) {
+	Lexer l = mkLexer (u"123.");
+
+	BOOST_CHECK (l.check (TokenType::DECIMAL_CONSTANT, 0));
+	BOOST_CHECK (l.la (0).length () == 4);
+	BOOST_CHECK (l.la (0).error () == TokenError::INVALID_NUMBER_FORMAT);
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

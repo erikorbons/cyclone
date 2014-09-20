@@ -96,12 +96,14 @@ namespace parser {
 		return m_lookahead[offset];
 	}
 
-	void Lexer :: accept () {
+	Token Lexer :: accept () {
 		// Make sure there is a token in the lookahead list:
 		la (0);
 
 		// Remove the first token from the lookahead list:
+		Token t = m_lookahead[0];
 		m_lookahead.erase (m_lookahead.begin ());
+		return t;
 	}
 
 	void Lexer :: next () {
@@ -308,7 +310,67 @@ namespace parser {
 	}
 
 	Token Lexer :: parseDecimal () {
+		std::size_t length = 0;
+		bool hasIntegerPart = false;
+		bool hasDot = false;
+		bool hasFraction = false;
+		bool hasE = false;
+		bool hasExponent = false;
 
+		if (m_scanner.la () == '-') {
+			++ length;
+			m_scanner.accept ();
+		}
+
+		while (isDigit (m_scanner.la ())) {
+			hasIntegerPart = true;
+			++ length;
+			m_scanner.accept ();
+		}
+
+		if (m_scanner.la () == '.') {
+			hasDot = true;
+			++ length;
+			m_scanner.accept ();
+
+			while (isDigit (m_scanner.la ())) {
+				hasFraction = true;
+				++ length;
+				m_scanner.accept ();
+			}
+		}
+
+		if (m_scanner.la () == 'e' || m_scanner.la () == 'E') {
+			hasE = true;
+			++ length;
+			m_scanner.accept ();
+
+			if (m_scanner.la () == '+' || m_scanner.la () == '-') {
+				++ length;
+				m_scanner.accept ();
+			}
+
+			while (isDigit (m_scanner.la ())) {
+				hasExponent = true;
+				++ length;
+				m_scanner.accept ();
+			}
+		}
+
+		// Type flags:
+		bool isInt = hasIntegerPart && !hasDot && !hasE;
+		if (m_scanner.la () == 'f' || m_scanner.la () == 'F'
+				|| m_scanner.la () == 'd' || m_scanner.la () == 'D'
+				|| (isInt && (m_scanner.la () == 'l' || m_scanner.la () == 'L'))) {
+			++ length;
+			m_scanner.accept ();
+		}
+
+		if ((!hasIntegerPart && !hasFraction) || (hasDot && !hasFraction) || (hasE && !hasExponent)) {
+			return Token (TokenType::DECIMAL_CONSTANT, TokenError::INVALID_NUMBER_FORMAT, length, 0);
+		}
+
+		return Token (TokenType::DECIMAL_CONSTANT, length);
 	}
 
 	Token Lexer :: parseHex () {
