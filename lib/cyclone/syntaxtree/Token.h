@@ -85,11 +85,11 @@ class Token {
 public:
 
 	Token (TokenType type, std::size_t length)
-		: m_type (type), m_error (TokenError::NO_ERROR), m_length (length), m_errorOffset (0) {
+		: m_type (type), m_error (TokenError::NO_ERROR), m_length (length) {
 	}
 
-	Token (TokenType type, TokenError error, std::size_t length, std::size_t errorOffset)
-		: m_type (type), m_error (error), m_length (length), m_errorOffset (errorOffset) {
+	Token (TokenType type, TokenError error, std::size_t length)
+		: m_type (type), m_error (error), m_length (length) {
 	}
 
 	TokenType type () const {
@@ -104,16 +104,11 @@ public:
 		return m_length;
 	}
 
-	std::size_t errorOffset () const {
-		return m_errorOffset;
-	}
-
 private:
 
 	TokenType	m_type;
 	TokenError	m_error;
 	std::size_t	m_length;
-	std::size_t	m_errorOffset;
 };
 
 }	// namespace syntaxtree

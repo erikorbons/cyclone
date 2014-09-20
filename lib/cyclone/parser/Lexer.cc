@@ -156,7 +156,7 @@ namespace parser {
 
 			if (m_scanner.la () == 0) {
 				// Unterminated comment:
-				emit (Token (TokenType::MULTI_LINE_COMMENT, TokenError::UNTERMINATED_COMMENT, length, 0));
+				emit (Token (TokenType::MULTI_LINE_COMMENT, TokenError::UNTERMINATED_COMMENT, length));
 				return;
 			}
 
@@ -250,7 +250,7 @@ namespace parser {
 				m_scanner.accept ();
 			}
 
-			emit (Token (TokenType::INVALID_CHARACTERS, TokenError::UNEXPECTED_CHARACTERS, length, 0));
+			emit (Token (TokenType::INVALID_CHARACTERS, TokenError::UNEXPECTED_CHARACTERS, length));
 			return;
 		}
 	}
@@ -272,7 +272,7 @@ namespace parser {
 
 			if (m_scanner.la () == 0 || m_scanner.la () == '\r' || m_scanner.la () == '\n') {
 				// Unterminated string:
-				return Token (tokenType, TokenError::UNTERMINATED_CHARACTER_SEQUENCE, length, 0);
+				return Token (tokenType, TokenError::UNTERMINATED_CHARACTER_SEQUENCE, length);
 			} else if (m_scanner.la () == '\\') {
 				// Escape sequence:
 				char16_t c = m_scanner.la (1);
@@ -303,7 +303,7 @@ namespace parser {
 		// Report invalid characters when multiple characters have been parsed between the
 		// quotes:
 		if (tokenType == TokenType::CHARACTER_CONSTANT && multipleCharacters) {
-			return Token (tokenType, TokenError::INVALID_CHARACTER_CONSTANT, length, 0);
+			return Token (tokenType, TokenError::INVALID_CHARACTER_CONSTANT, length);
 		}
 
 		return Token (tokenType, length);
@@ -367,7 +367,7 @@ namespace parser {
 		}
 
 		if ((!hasIntegerPart && !hasFraction) || (hasDot && !hasFraction) || (hasE && !hasExponent)) {
-			return Token (TokenType::DECIMAL_CONSTANT, TokenError::INVALID_NUMBER_FORMAT, length, 0);
+			return Token (TokenType::DECIMAL_CONSTANT, TokenError::INVALID_NUMBER_FORMAT, length);
 		}
 
 		return Token (TokenType::DECIMAL_CONSTANT, length);
