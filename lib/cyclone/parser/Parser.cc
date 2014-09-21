@@ -4,14 +4,13 @@ namespace cyclone {
 namespace parser {
 
 	namespace internal {
-		RuleScopeBase :: RuleScopeBase (Parser & parser, const std::u16string & name, const std::shared_ptr<NonTerminalNode> target)
+		RuleScope :: RuleScope (Parser & parser, NodeType nodeType)
 			: m_parser (parser),
-			  m_name (name),
-			  m_target (target) {
+			  m_target (std::make_shared<Node> (nodeType)) {
 			m_parser.m_scopes.push (this);
 		}
 
-		RuleScopeBase :: ~RuleScopeBase () {
+		RuleScope :: ~RuleScope () {
 			m_parser.m_scopes.pop ();
 		}
 
@@ -20,22 +19,44 @@ namespace parser {
 	Parser :: Parser (Lexer & lexer) : m_lexer (lexer) {
 	}
 
-	Parser::Result<Parser::CompilationUnit> Parser :: parseCompilationUnit () {
-		RuleScope<CompilationUnit> scope (*this, u"compilationUnit");
+	Parser::Result<Parser::Node> Parser :: parseCompilationUnit () {
+		RuleScope scope (*this, NodeType::COMPILATION_UNIT);
+
+		while (!check (TokenType::END_OF_INPUT)) {
+			parseNamespaceMember (false);
+		}
+
+		// Accept the end of input token:
+		accept ();
 
 		return scope.get ();
 	}
 
-	Parser::Result<Parser::Namespace> Parser :: parseNamespace () {
-		RuleScope<Namespace> scope (*this, u"namespace");
+	Parser::Result<Parser::Node> Parser :: parseNamespace () {
+		RuleScope scope (*this, NodeType::NAMESPACE);
 
 		return scope.get ();
 	}
 
-	Parser::Result<Parser::Using> Parser :: parseUsing () {
-		RuleScope<Using> scope (*this, u"using");
+	Parser::Result<Parser::Node> Parser :: parseUsing () {
+		RuleScope scope (*this, NodeType::USING);
 
 		return scope.get ();
+	}
+
+	void Parser :: parseNamespaceMember (bool inBlock) {
+		if (check (TokenType::USING)) {
+			add (parseUsing ());
+		} else if (check (TokenType::NAMESPACE)) {
+			add (parseNamespace ());
+		} else {
+			// Recover until the next valid token is found:
+			if (inBlock) {
+				add (recover ({ TokenType::USING, TokenType::NAMESPACE, TokenType::RIGHT_CURLY }));
+			} else {
+				add (recover ({ TokenType::USING, TokenType::NAMESPACE }));
+			}
+		}
 	}
 
 	bool Parser :: isNonSignificant (TokenType tokenType) {
@@ -45,7 +66,7 @@ namespace parser {
 			|| tokenType == TokenType :: INVALID_CHARACTERS;
 	}
 
-	Parser::NonTerminalNode * Parser :: node () const {
+	Parser::Node * Parser :: node () const {
 		return m_scopes.top ()->node ();
 	}
 
@@ -68,10 +89,28 @@ namespace parser {
 		// Accept all tokens up to and including the next significant token:
 		while (true) {
 			Token token = m_lexer.accept ();
-			node ()->addNode (std::make_shared<TerminalNode> (token));
+			node ()->addNode (std::make_shared<Terminal> (token));
 			if (!isNonSignificant (token.type ())) {
 				break;
 			}
+		}
+	}
+
+	Parser::Result<Parser::Node> Parser :: recover (std::initializer_list<TokenType> validTokenTypes) {
+		RuleScope scope (*this, NodeType::ERROR);
+
+		while (true) {
+			if (check (TokenType::END_OF_INPUT)) {
+				return scope.get ();
+			}
+
+			for (TokenType tt: validTokenTypes) {
+				if (check (tt)) {
+					return scope.get ();
+				}
+			}
+
+			accept ();
 		}
 	}
 }

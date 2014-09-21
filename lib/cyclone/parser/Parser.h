@@ -6,9 +6,6 @@
 #include <stack>
 #include <cyclone/syntaxtree/Token.h>
 #include <cyclone/syntaxtree/Node.h>
-#include <cyclone/syntaxtree/CompilationUnit.h>
-#include <cyclone/syntaxtree/Namespace.h>
-#include <cyclone/syntaxtree/Using.h>
 #include <cyclone/parser/Lexer.h>
 
 namespace cyclone {
@@ -18,23 +15,20 @@ class Parser;
 
 namespace internal {
 
-	class RuleScopeBase {
+	class RuleScope {
 	public:
 
-		typedef cyclone::syntaxtree::NonTerminalNode NonTerminalNode;
+		typedef cyclone::syntaxtree::NodeType NodeType;
+		typedef cyclone::syntaxtree::Node Node;
 
-		RuleScopeBase (Parser & parser, const std::u16string & name, const std::shared_ptr<NonTerminalNode> target);
-		~RuleScopeBase ();
+		RuleScope (Parser & parser, NodeType nodeType);
+		~RuleScope ();
 
-		const std::u16string & name () const {
-			return m_name;
-		}
-
-		NonTerminalNode * node () const {
+		Node * node () const {
 			return m_target.get ();
 		}
 
-		std::shared_ptr<NonTerminalNode> get () const {
+		std::shared_ptr<Node> get () const {
 			return m_target;
 		}
 
@@ -44,62 +38,51 @@ namespace internal {
 
 	private:
 
-		Parser &												m_parser;
-		std::u16string											m_name;
-		std::shared_ptr<cyclone::syntaxtree::NonTerminalNode>	m_target;
+		Parser &				m_parser;
+		std::shared_ptr<Node>	m_target;
 	};
 }
 
 class Parser {
 public:
 
-	typedef cyclone::syntaxtree::Token				Token;
-	typedef cyclone::syntaxtree::TokenType			TokenType;
-	typedef cyclone::syntaxtree::TerminalNode		TerminalNode;
-	typedef cyclone::syntaxtree::NonTerminalNode	NonTerminalNode;
-	typedef cyclone::syntaxtree::CompilationUnit	CompilationUnit;
-	typedef cyclone::syntaxtree::Namespace			Namespace;
-	typedef cyclone::syntaxtree::Using				Using;
+	typedef cyclone::syntaxtree::Token		Token;
+	typedef cyclone::syntaxtree::TokenType	TokenType;
+	typedef cyclone::syntaxtree::NodeType	NodeType;
+	typedef cyclone::syntaxtree::NodeBase		NodeBase;
+	typedef cyclone::syntaxtree::Terminal	Terminal;
+	typedef cyclone::syntaxtree::Node		Node;
 
 	template<class T> using Result = std::shared_ptr<T>;
 
 	Parser (Lexer & lexer);
 
-	Result<CompilationUnit> parseCompilationUnit ();
-	Result<Namespace> parseNamespace ();
-	Result<Using> parseUsing ();
+	Result<Node> parseCompilationUnit ();
+	Result<Node> parseNamespace ();
+	Result<Node> parseUsing ();
 
 private:
 
-	friend class internal::RuleScopeBase;
+	friend class internal::RuleScope;
+	typedef internal::RuleScope RuleScope;
 
-	template<class T>
-	class RuleScope : public internal::RuleScopeBase {
-	public:
+	void parseNamespaceMember (bool inBlock);
 
-		RuleScope (Parser & parser, const std::u16string & name)
-			: internal::RuleScopeBase (parser, name, std::static_pointer_cast<NonTerminalNode> (std::make_shared<T> ())) {
-		}
-
-		T * node () const {
-			return (T *)internal::RuleScopeBase::node ();
-		}
-
-		std::shared_ptr<T> get () const {
-			return std::static_pointer_cast<T> (internal::RuleScopeBase::get ());
-		}
-	};
-
-	NonTerminalNode * node () const;
+	Node * node () const;
 
 	static bool isNonSignificant (TokenType tokenType);
 
 	bool check (TokenType tokenType);
 	void expect (TokenType tokenType);
 	void accept ();
+	Result<Node> recover (std::initializer_list<TokenType> validTokenTypes);
+
+	void add (const std::shared_ptr<NodeBase> & n) {
+		node ()->addNode (n);
+	}
 
 	Lexer &									m_lexer;
-	std::stack<internal::RuleScopeBase *>	m_scopes;
+	std::stack<internal::RuleScope *>		m_scopes;
 };
 
 }	// namespace parser

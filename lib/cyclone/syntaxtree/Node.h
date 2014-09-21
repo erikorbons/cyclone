@@ -8,40 +8,64 @@
 namespace cyclone {
 namespace syntaxtree {
 
-class Node {
+enum class NodeType {
+	ERROR,
+
+	COMPILATION_UNIT,
+	NAMESPACE,
+	USING
+};
+
+class NodeBase {
 public:
 
-	virtual ~Node () { }
+	virtual ~NodeBase () { }
 
 	virtual std::size_t length () const = 0;
 };
 
-class NonTerminalNode : public Node {
+class Node : public NodeBase {
 public:
+
+	Node (NodeType type) : m_nodeType (type) {
+	}
 
 	virtual std::size_t length () const {
 		return m_length;
 	}
 
-	void addNode (const std::shared_ptr<Node> & node) {
+	void addNode (const std::shared_ptr<NodeBase> & node) {
 		m_nodes.push_back (node);
 		m_length += node->length ();
 	}
 
+	unsigned nodeCount () const {
+		return m_nodes.size ();
+	}
+
+	NodeType type () const {
+		return m_nodeType;
+	}
+
 private:
 
-	std::vector<std::shared_ptr<Node>>	m_nodes;
-	std::size_t							m_length;
+	NodeType								m_nodeType;
+	std::vector<std::shared_ptr<NodeBase>>	m_nodes;
+	std::size_t								m_length;
 };
 
-class TerminalNode: public Node {
+class Terminal: public NodeBase {
 public:
 
-	TerminalNode (const Token & token) : m_token (token) {
+	Terminal (const Token & token) : m_token (token) {
 	}
 
 	virtual std::size_t length () const {
 		return m_token.length ();
+	}
+
+	Token token () const {
+		return m_token;
 	}
 
 private:

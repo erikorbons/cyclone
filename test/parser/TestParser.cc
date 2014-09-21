@@ -27,4 +27,14 @@ BOOST_AUTO_TEST_CASE (testCreateParser) {
 	Parser p (l);
 }
 
+BOOST_AUTO_TEST_CASE (testParseCompilationUnit) {
+	Lexer l = mkLexer (u"  ");
+	Parser p (l);
+
+	std::shared_ptr<Node> cu = p.parseCompilationUnit ();
+
+	BOOST_CHECK (cu->nodeCount () == 2);
+	BOOST_CHECK (cu->length () == 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
