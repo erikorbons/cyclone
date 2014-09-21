@@ -85,11 +85,15 @@ class Token {
 public:
 
 	Token (TokenType type, std::size_t length)
-		: m_type (type), m_error (TokenError::NO_ERROR), m_length (length) {
+		: m_type (type), m_error (TokenError::NO_ERROR), m_length (length), m_hasLineBreak (false) {
+	}
+
+	Token (TokenType type, std::size_t length, bool hasLineBreak)
+		: m_type (type), m_error (TokenError::NO_ERROR), m_length (length), m_hasLineBreak (hasLineBreak) {
 	}
 
 	Token (TokenType type, TokenError error, std::size_t length)
-		: m_type (type), m_error (error), m_length (length) {
+		: m_type (type), m_error (error), m_length (length), m_hasLineBreak (false) {
 	}
 
 	TokenType type () const {
@@ -104,11 +108,16 @@ public:
 		return m_length;
 	}
 
+	bool hasLineBreak () const {
+		return m_hasLineBreak;
+	}
+
 private:
 
 	TokenType	m_type;
 	TokenError	m_error;
 	std::size_t	m_length;
+	bool		m_hasLineBreak;
 };
 
 }	// namespace syntaxtree

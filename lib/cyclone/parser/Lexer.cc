@@ -30,6 +30,12 @@ namespace parser {
 	};
 
 	StringTokenPair punctuation[] = {
+		{ u"(", TokenType::LEFT_BRACE },
+		{ u")", TokenType::RIGHT_BRACE },
+		{ u"{", TokenType::LEFT_CURLY },
+		{ u"}", TokenType::RIGHT_CURLY },
+		{ u"[", TokenType::LEFT_BRACKET },
+		{ u"]", TokenType::RIGHT_BRACKET },
 		{ u"~=", TokenType::INVERT_ASSIGN },
 		{ u"~", TokenType::INVERT },
 		{ u"!=", TokenType::NOT_EQUAL },
@@ -116,11 +122,15 @@ namespace parser {
 		// Parse whitespace:
 		if (m_scanner.la () > 0 && m_scanner.la () <= ' ') {
 			std::size_t length = 0;
+			bool hasLineBreak = false;
 			while (m_scanner.la () > 0 && m_scanner.la () <= ' ') {
+				if (m_scanner.la () == '\n') {
+					hasLineBreak = true;
+				}
 				++ length;
 				m_scanner.accept ();
 			}
-			emit (Token (TokenType::WHITESPACE, length));
+			emit (Token (TokenType::WHITESPACE, length, hasLineBreak));
 			return;
 		}
 

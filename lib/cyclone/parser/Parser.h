@@ -49,7 +49,7 @@ public:
 	typedef cyclone::syntaxtree::Token		Token;
 	typedef cyclone::syntaxtree::TokenType	TokenType;
 	typedef cyclone::syntaxtree::NodeType	NodeType;
-	typedef cyclone::syntaxtree::NodeBase		NodeBase;
+	typedef cyclone::syntaxtree::NodeBase	NodeBase;
 	typedef cyclone::syntaxtree::Terminal	Terminal;
 	typedef cyclone::syntaxtree::Node		Node;
 
@@ -60,13 +60,14 @@ public:
 	Result parseCompilationUnit ();
 	Result parseNamespace ();
 	Result parseUsing ();
+	Result parseScopedName ();
 
 private:
 
 	friend class internal::RuleScope;
 	typedef internal::RuleScope RuleScope;
 
-	void parseNamespaceMember (bool inBlock);
+	void parseNamespaceContent ();
 
 	Node * node () const;
 

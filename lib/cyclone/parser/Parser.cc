@@ -22,12 +22,10 @@ namespace parser {
 	Parser::Result Parser :: parseCompilationUnit () {
 		RuleScope scope (*this, NodeType::COMPILATION_UNIT);
 
-		while (!check (TokenType::END_OF_INPUT)) {
-			parseNamespaceMember (false);
-		}
+		parseNamespaceContent ();
 
 		// Accept the end of input token:
-		accept ();
+		expect (TokenType :: END_OF_INPUT);
 
 		return scope.get ();
 	}
@@ -35,26 +33,59 @@ namespace parser {
 	Parser::Result Parser :: parseNamespace () {
 		RuleScope scope (*this, NodeType::NAMESPACE);
 
+		expect (TokenType::NAMESPACE);
+
+		add (parseScopedName ());
+
+		expect (TokenType::LEFT_CURLY);
+
+		parseNamespaceContent ();
+
+		expect (TokenType :: RIGHT_CURLY);
+
 		return scope.get ();
 	}
 
 	Parser::Result Parser :: parseUsing () {
 		RuleScope scope (*this, NodeType::USING);
 
+		expect (TokenType::USING);
+
+		add (parseScopedName ());
+
+		if (check (TokenType::ASSIGN)) {
+			accept ();
+
+			expect (TokenType::NAME);
+		}
+
+		expect (TokenType::SEMICOLON);
+
 		return scope.get ();
 	}
 
-	void Parser :: parseNamespaceMember (bool inBlock) {
-		if (check (TokenType::USING)) {
-			add (parseUsing ());
-		} else if (check (TokenType::NAMESPACE)) {
-			add (parseNamespace ());
-		} else {
-			// Recover until the next valid token is found:
-			if (inBlock) {
-				add (recover ({ TokenType::USING, TokenType::NAMESPACE, TokenType::RIGHT_CURLY }));
+	Parser::Result Parser :: parseScopedName () {
+		RuleScope scope (*this, NodeType::SCOPED_NAME);
+
+		expect (TokenType::NAME);
+
+		while (check (TokenType::DOT)) {
+			accept ();
+			expect (TokenType::NAME);
+		}
+
+		return scope.get ();
+	}
+
+
+	void Parser :: parseNamespaceContent () {
+		while (true) {
+			if (check (TokenType::USING)) {
+				add (parseUsing ());
+			} else if (check (TokenType::NAMESPACE)) {
+				add (parseNamespace ());
 			} else {
-				add (recover ({ TokenType::USING, TokenType::NAMESPACE }));
+				break;
 			}
 		}
 	}
@@ -82,7 +113,53 @@ namespace parser {
 	}
 
 	void Parser :: expect (TokenType tokenType) {
+		int n = 0;
+		while (!check (tokenType)) {
+			// Emit an error node:
 
+			// Break at end of input:
+			if (check (TokenType::END_OF_INPUT)) {
+				add (recover ({ }));
+				return;
+			}
+
+			// Break at a semicolon:
+			if (check (TokenType::SEMICOLON)) {
+				add (recover ({ TokenType::SEMICOLON }));
+				return;
+			}
+
+			// Break after parsing 50 tokens:
+			if (n >= 50) {
+				add (std::make_shared<Node> (NodeType::ERROR));
+				return;
+			}
+
+			// Break at a newline:
+			unsigned i = 0;
+			while (true) {
+				if (m_lexer.la (i).type () == TokenType::WHITESPACE && m_lexer.la (i).hasLineBreak ()) {
+					add (std::make_shared<Node> (NodeType::ERROR));
+					return;
+				}
+				if (!isNonSignificant (m_lexer.la (i).type ())) {
+					break;
+				}
+				++ i;
+			}
+
+			// Accept the next token in an error:
+			{
+				RuleScope scope (*this, NodeType::ERROR);
+
+				accept ();
+
+				add (scope.get ());
+			}
+
+			++ n;
+		}
+		accept ();
 	}
 
 	void Parser :: accept () {

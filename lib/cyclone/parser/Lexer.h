@@ -67,7 +67,15 @@ namespace internal {
 		}
 
 		bool isRangeComplete () const {
-			return m_current >= m_rangeEnd;
+			std::size_t currentOffset = m_current.offset ();
+			for (char16_t la: m_lookahead) {
+				if (la != 0) {
+					-- currentOffset;
+				} else {
+					break;
+				}
+			}
+			return currentOffset >= m_rangeEnd.offset ();
 		}
 
 	private:

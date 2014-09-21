@@ -140,39 +140,54 @@ BOOST_AUTO_TEST_CASE (testKeyword) {
 }
 
 BOOST_AUTO_TEST_CASE (testName) {
-	Lexer l = mkLexer (u"  _abcd01  $efgh1  ");
+	{
+		Lexer l = mkLexer (u"  _abcd01  $efgh1  ");
 
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 0));
-	BOOST_CHECK (l.la (0).length () == 2);
-	BOOST_CHECK (l.check (TokenType::NAME, 1));
-	BOOST_CHECK (l.la (1).length () == 7);
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 2));
-	BOOST_CHECK (l.la (2).length () == 2);
-	BOOST_CHECK (l.check (TokenType::NAME, 3));
-	BOOST_CHECK (l.la (3).length () == 6);
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 4));
-	BOOST_CHECK (l.la (4).length () == 2);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 0));
+		BOOST_CHECK (l.la (0).length () == 2);
+		BOOST_CHECK (l.check (TokenType::NAME, 1));
+		BOOST_CHECK (l.la (1).length () == 7);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 2));
+		BOOST_CHECK (l.la (2).length () == 2);
+		BOOST_CHECK (l.check (TokenType::NAME, 3));
+		BOOST_CHECK (l.la (3).length () == 6);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 4));
+		BOOST_CHECK (l.la (4).length () == 2);
+	}
+	{
+		Lexer l = mkLexer (u"a a");
+		BOOST_CHECK (l.check (TokenType::NAME));
+		BOOST_CHECK (l.check (TokenType::NAME, 2));
+	}
 }
 
 BOOST_AUTO_TEST_CASE (testPunctuation) {
-	Lexer l = mkLexer (u"  ++ - >=/  ");
+	{
+		Lexer l = mkLexer (u"  ++ - >=/  ");
 
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 0));
-	BOOST_CHECK (l.la (0).length () == 2);
-	BOOST_CHECK (l.check (TokenType::INCREMENT, 1));
-	BOOST_CHECK (l.la (1).length () == 2);
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 2));
-	BOOST_CHECK (l.la (2).length () == 1);
-	BOOST_CHECK (l.check (TokenType::MINUS, 3));
-	BOOST_CHECK (l.la (3).length () == 1);
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 4));
-	BOOST_CHECK (l.la (4).length () == 1);
-	BOOST_CHECK (l.check (TokenType::GREATER_THAN_EQUAL, 5));
-	BOOST_CHECK (l.la (5).length () == 2);
-	BOOST_CHECK (l.check (TokenType::DIVIDE, 6));
-	BOOST_CHECK (l.la (6).length () == 1);
-	BOOST_CHECK (l.check (TokenType::WHITESPACE, 7));
-	BOOST_CHECK (l.la (7).length () == 2);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 0));
+		BOOST_CHECK (l.la (0).length () == 2);
+		BOOST_CHECK (l.check (TokenType::INCREMENT, 1));
+		BOOST_CHECK (l.la (1).length () == 2);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 2));
+		BOOST_CHECK (l.la (2).length () == 1);
+		BOOST_CHECK (l.check (TokenType::MINUS, 3));
+		BOOST_CHECK (l.la (3).length () == 1);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 4));
+		BOOST_CHECK (l.la (4).length () == 1);
+		BOOST_CHECK (l.check (TokenType::GREATER_THAN_EQUAL, 5));
+		BOOST_CHECK (l.la (5).length () == 2);
+		BOOST_CHECK (l.check (TokenType::DIVIDE, 6));
+		BOOST_CHECK (l.la (6).length () == 1);
+		BOOST_CHECK (l.check (TokenType::WHITESPACE, 7));
+		BOOST_CHECK (l.la (7).length () == 2);
+	}
+	{
+		Lexer l = mkLexer (u"{}");
+
+		BOOST_CHECK (l.check (TokenType::LEFT_CURLY, 0));
+		BOOST_CHECK (l.check (TokenType::RIGHT_CURLY, 1));
+	}
 }
 
 BOOST_AUTO_TEST_CASE (testDecimal) {

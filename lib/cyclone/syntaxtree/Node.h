@@ -13,7 +13,8 @@ enum class NodeType {
 
 	COMPILATION_UNIT,
 	NAMESPACE,
-	USING
+	USING,
+	SCOPED_NAME
 };
 
 class NodeBase {
@@ -22,6 +23,8 @@ public:
 	virtual ~NodeBase () { }
 
 	virtual std::size_t length () const = 0;
+	virtual bool isTerminal () const = 0;
+	virtual bool isNode () const = 0;
 };
 
 class Node : public NodeBase {
@@ -43,9 +46,16 @@ public:
 		return m_nodes.size ();
 	}
 
+	std::shared_ptr<NodeBase> node (unsigned i) const {
+		return m_nodes[i];
+	}
+
 	NodeType type () const {
 		return m_nodeType;
 	}
+
+	virtual bool isTerminal () const { return false; }
+	virtual bool isNode () const { return true; }
 
 private:
 
@@ -67,6 +77,9 @@ public:
 	Token token () const {
 		return m_token;
 	}
+
+	virtual bool isTerminal () const { return true; }
+	virtual bool isNode () const { return false; }
 
 private:
 
