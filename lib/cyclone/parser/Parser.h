@@ -53,13 +53,13 @@ public:
 	typedef cyclone::syntaxtree::Terminal	Terminal;
 	typedef cyclone::syntaxtree::Node		Node;
 
-	template<class T> using Result = std::shared_ptr<T>;
+	using Result = std::shared_ptr<Node>;
 
 	Parser (Lexer & lexer);
 
-	Result<Node> parseCompilationUnit ();
-	Result<Node> parseNamespace ();
-	Result<Node> parseUsing ();
+	Result parseCompilationUnit ();
+	Result parseNamespace ();
+	Result parseUsing ();
 
 private:
 
@@ -75,7 +75,7 @@ private:
 	bool check (TokenType tokenType);
 	void expect (TokenType tokenType);
 	void accept ();
-	Result<Node> recover (std::initializer_list<TokenType> validTokenTypes);
+	Result recover (std::initializer_list<TokenType> validTokenTypes);
 
 	void add (const std::shared_ptr<NodeBase> & n) {
 		node ()->addNode (n);

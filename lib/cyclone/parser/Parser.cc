@@ -19,7 +19,7 @@ namespace parser {
 	Parser :: Parser (Lexer & lexer) : m_lexer (lexer) {
 	}
 
-	Parser::Result<Parser::Node> Parser :: parseCompilationUnit () {
+	Parser::Result Parser :: parseCompilationUnit () {
 		RuleScope scope (*this, NodeType::COMPILATION_UNIT);
 
 		while (!check (TokenType::END_OF_INPUT)) {
@@ -32,13 +32,13 @@ namespace parser {
 		return scope.get ();
 	}
 
-	Parser::Result<Parser::Node> Parser :: parseNamespace () {
+	Parser::Result Parser :: parseNamespace () {
 		RuleScope scope (*this, NodeType::NAMESPACE);
 
 		return scope.get ();
 	}
 
-	Parser::Result<Parser::Node> Parser :: parseUsing () {
+	Parser::Result Parser :: parseUsing () {
 		RuleScope scope (*this, NodeType::USING);
 
 		return scope.get ();
@@ -96,7 +96,7 @@ namespace parser {
 		}
 	}
 
-	Parser::Result<Parser::Node> Parser :: recover (std::initializer_list<TokenType> validTokenTypes) {
+	Parser::Result Parser :: recover (std::initializer_list<TokenType> validTokenTypes) {
 		RuleScope scope (*this, NodeType::ERROR);
 
 		while (true) {
