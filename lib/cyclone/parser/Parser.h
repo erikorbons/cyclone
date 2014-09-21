@@ -1,210 +1,106 @@
 #ifndef CYCLONE_PARSER_PARSER_H__
 #define CYCLONE_PARSER_PARSER_H__
 
+#include <string>
+#include <memory>
+#include <stack>
 #include <cyclone/syntaxtree/Token.h>
 #include <cyclone/syntaxtree/Node.h>
+#include <cyclone/syntaxtree/CompilationUnit.h>
+#include <cyclone/syntaxtree/Namespace.h>
+#include <cyclone/syntaxtree/Using.h>
+#include <cyclone/parser/Lexer.h>
 
 namespace cyclone {
 namespace parser {
 
-template<class R>
-class RuleBase {
-public:
+class Parser;
 
-	virtual ~RuleBase () { }
-};
+namespace internal {
 
-template<class R>
-class RepeatedRule;
+	class RuleScopeBase {
+	public:
 
-template<class A, class B>
-class ConcatenatedRule;
+		typedef cyclone::syntaxtree::NonTerminalNode NonTerminalNode;
 
-template<class A, class B>
-class AlternateRule;
+		RuleScopeBase (Parser & parser, const std::u16string & name, const std::shared_ptr<NonTerminalNode> target);
+		~RuleScopeBase ();
 
-template<class Dest>
-class RuleName;
+		const std::u16string & name () const {
+			return m_name;
+		}
 
-template<class R>
-class RepeatedRule : public RuleBase<RepeatedRule<R>> {
-public:
+		NonTerminalNode * node () const {
+			return m_target.get ();
+		}
 
-	RepeatedRule (const R & rule, unsigned min, unsigned max)
-		: m_rule (rule), m_min (min), m_max (max) {
-	}
+		std::shared_ptr<NonTerminalNode> get () const {
+			return m_target;
+		}
 
-	template<class B>
-	ConcatenatedRule<RepeatedRule<R>, B> operator + (const B & b) const {
-		return ConcatenatedRule<RepeatedRule<R>, B> (*this, b);
-	}
+		Parser & parser () const {
+			return m_parser;
+		}
 
-	template<class B>
-	AlternateRule<RepeatedRule<R>, B> operator | (const B & b) const {
-		return AlternateRule<RepeatedRule<R>, B> (*this, b);
-	}
+	private:
 
-private:
-
-	R			m_rule;
-	unsigned	m_min;
-	unsigned	m_max;
-};
-
-template<class A, class B>
-class AlternateRule : public RuleBase<AlternateRule<A, B>> {
-public:
-
-	AlternateRule (const A & left, const B & right)
-		: m_left (left), m_right (right) {
-	}
-
-	RepeatedRule<AlternateRule<A, B>> operator () (unsigned count) const {
-		return RepeatedRule<AlternateRule<A, B>> (*this, count, count);
-	}
-
-	RepeatedRule<AlternateRule<A, B>> operator () (unsigned min, unsigned max) const {
-		return RepeatedRule<AlternateRule<A, B>> (*this, min, max);
-	}
-
-	template<class NewB>
-	ConcatenatedRule<AlternateRule<A, B>, NewB> operator + (const NewB & b) const {
-		return ConcatenatedRule<AlternateRule<A, B>, NewB> (*this, b);
-	}
-
-	template<class NewB>
-	AlternateRule<AlternateRule<A, B>, NewB> operator | (const NewB & b) const {
-		return AlternateRule<AlternateRule<A, B>, NewB> (*this, b);
-	}
-
-private:
-
-	A	m_left;
-	B	m_right;
-};
-
-
-template<class A, class B>
-class ConcatenatedRule : public RuleBase<ConcatenatedRule<A, B>> {
-public:
-
-	ConcatenatedRule (const A & left, const B & right)
-		: m_left (left), m_right (right) {
-	}
-
-	RepeatedRule<ConcatenatedRule<A, B>> operator () (unsigned count) const {
-		return RepeatedRule<ConcatenatedRule<A, B>> (*this, count, count);
-	}
-
-	RepeatedRule<ConcatenatedRule<A, B>> operator () (unsigned min, unsigned max) const {
-		return RepeatedRule<ConcatenatedRule<A, B>> (*this, min, max);
-	}
-
-	template<class NewB>
-	ConcatenatedRule<ConcatenatedRule<A, B>, NewB> operator + (const NewB & b) const {
-		return ConcatenatedRule<ConcatenatedRule<A, B>, NewB> (*this, b);
-	}
-
-	template<class NewB>
-	AlternateRule<ConcatenatedRule<A, B>, NewB> operator | (const NewB & b) const {
-		return AlternateRule<ConcatenatedRule<A, B>, NewB> (*this, b);
-	}
-
-private:
-
-	A	m_left;
-	B	m_right;
-};
-
-class TerminalRule : public RuleBase<TerminalRule> {
-public:
-
-	TerminalRule (cyclone::syntaxtree::TokenType tokenType)
-		: m_tokenType (tokenType) {
-	}
-
-	cyclone::syntaxtree::TokenType tokenType () const {
-		return m_tokenType;
-	}
-
-	RepeatedRule<TerminalRule> operator () (unsigned count) const {
-		return RepeatedRule<TerminalRule> (*this, count, count);
-	}
-
-	RepeatedRule<TerminalRule> operator () (unsigned min, unsigned max) const {
-		return RepeatedRule<TerminalRule> (*this, min, max);
-	}
-
-	template<class B>
-	ConcatenatedRule<TerminalRule, B> operator + (const B & b) const {
-		return ConcatenatedRule<TerminalRule, B> (*this, b);
-	}
-
-	template<class B>
-	AlternateRule<TerminalRule, B> operator | (const B & b) const {
-		return AlternateRule<TerminalRule, B> (*this, b);
-	}
-
-private:
-
-	cyclone::syntaxtree::TokenType m_tokenType;
-};
-
-template<class Dest, class R>
-class NamedRule : public RuleBase<NamedRule<Dest, R>> {
-public:
-
-	NamedRule (const RuleName<Dest> & name, const R & rule) : m_name (name), m_rule (rule) {
-	}
-
-private:
-
-	RuleName<Dest>	m_name;
-	R				m_rule;
-};
-
-template<class Dest>
-class RuleName {
-public:
-
-	RuleName (const std::u16string & name) : m_name (name) {
-	}
-
-	template<class R>
-	NamedRule<Dest, R> operator > (const R & rule) const {
-		return NamedRule<Dest, R> (*this, rule);
-	}
-
-private:
-
-	std::u16string	m_name;
-};
-
-inline TerminalRule token (cyclone::syntaxtree::TokenType tokenType) {
-	return TerminalRule (tokenType);
+		Parser &												m_parser;
+		std::u16string											m_name;
+		std::shared_ptr<cyclone::syntaxtree::NonTerminalNode>	m_target;
+	};
 }
 
-template<class Dest>
-inline RuleName<Dest> rule (const std::u16string & name) {
-	return RuleName<Dest> (name);
-}
-
-template<class Dest, class R>
 class Parser {
 public:
 
-	Parser (const NamedRule<Dest, R> & rule) : m_rule (rule) {
-	}
+	typedef cyclone::syntaxtree::Token				Token;
+	typedef cyclone::syntaxtree::TokenType			TokenType;
+	typedef cyclone::syntaxtree::TerminalNode		TerminalNode;
+	typedef cyclone::syntaxtree::NonTerminalNode	NonTerminalNode;
+	typedef cyclone::syntaxtree::CompilationUnit	CompilationUnit;
+	typedef cyclone::syntaxtree::Namespace			Namespace;
+	typedef cyclone::syntaxtree::Using				Using;
+
+	template<class T> using Result = std::shared_ptr<T>;
+
+	Parser (Lexer & lexer);
+
+	Result<CompilationUnit> parseCompilationUnit ();
+	Result<Namespace> parseNamespace ();
+	Result<Using> parseUsing ();
 
 private:
 
-	NamedRule<Dest, R>	m_rule;
-};
+	friend class internal::RuleScopeBase;
 
-template<class Dest, class R>
-inline Parser<Dest, R> parser (const NamedRule<Dest, R> & rule) {
-	return Parser<Dest, R> (rule);
-}
+	template<class T>
+	class RuleScope : public internal::RuleScopeBase {
+	public:
+
+		RuleScope (Parser & parser, const std::u16string & name)
+			: internal::RuleScopeBase (parser, name, std::static_pointer_cast<NonTerminalNode> (std::make_shared<T> ())) {
+		}
+
+		T * node () const {
+			return (T *)internal::RuleScopeBase::node ();
+		}
+
+		std::shared_ptr<T> get () const {
+			return std::static_pointer_cast<T> (internal::RuleScopeBase::get ());
+		}
+	};
+
+	NonTerminalNode * node () const;
+
+	static bool isNonSignificant (TokenType tokenType);
+
+	bool check (TokenType tokenType);
+	void expect (TokenType tokenType);
+	void accept ();
+
+	Lexer &									m_lexer;
+	std::stack<internal::RuleScopeBase *>	m_scopes;
+};
 
 }	// namespace parser
 }	// namespace cyclone

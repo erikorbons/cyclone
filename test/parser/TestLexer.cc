@@ -8,7 +8,7 @@ using namespace cyclone::core;
 using namespace cyclone::parser;
 using namespace cyclone::syntaxtree;
 
-Lexer mkLexer (const std::u16string & value) {
+static Lexer mkLexer (const std::u16string & value) {
 	TextBuffer buffer (value);
 	return Lexer (buffer, buffer.begin (), buffer.end ());
 }

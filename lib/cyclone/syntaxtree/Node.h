@@ -16,12 +16,22 @@ public:
 	virtual std::size_t length () const = 0;
 };
 
-class NonterminalNode : public Node {
+class NonTerminalNode : public Node {
 public:
+
+	virtual std::size_t length () const {
+		return m_length;
+	}
+
+	void addNode (const std::shared_ptr<Node> & node) {
+		m_nodes.push_back (node);
+		m_length += node->length ();
+	}
 
 private:
 
 	std::vector<std::shared_ptr<Node>>	m_nodes;
+	std::size_t							m_length;
 };
 
 class TerminalNode: public Node {

@@ -1,1 +1,1 @@
-add_library(CycloneParser Lexer.cc)
+add_library(CycloneParser Lexer.cc Parser.cc)
