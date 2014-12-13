@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <stack>
+#include <cyclone/syntaxtree/SyntaxTree.h>
 #include <cyclone/syntaxtree/Token.h>
 #include <cyclone/syntaxtree/Node.h>
 #include <cyclone/parser/Lexer.h>
@@ -46,6 +47,7 @@ namespace internal {
 class Parser {
 public:
 
+	typedef cyclone::syntaxtree::SyntaxTree	SyntaxTree;
 	typedef cyclone::syntaxtree::Token		Token;
 	typedef cyclone::syntaxtree::TokenType	TokenType;
 	typedef cyclone::syntaxtree::NodeType	NodeType;
@@ -56,6 +58,8 @@ public:
 	using Result = std::shared_ptr<Node>;
 
 	Parser (Lexer & lexer);
+
+	SyntaxTree parse ();
 
 	Result parseCompilationUnit ();
 	Result parseNamespace ();

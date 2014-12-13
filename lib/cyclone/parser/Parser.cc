@@ -19,6 +19,10 @@ namespace parser {
 	Parser :: Parser (Lexer & lexer) : m_lexer (lexer) {
 	}
 
+	Parser::SyntaxTree Parser :: parse () {
+		return SyntaxTree (parseCompilationUnit ());
+	}
+
 	Parser::Result Parser :: parseCompilationUnit () {
 		RuleScope scope (*this, NodeType::COMPILATION_UNIT);
 
