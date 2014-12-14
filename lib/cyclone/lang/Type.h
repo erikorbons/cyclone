@@ -4,6 +4,20 @@
 namespace cyclone {
 namespace lang {
 
+/**
+ * Type hierarchy:
+ * + Type
+ * | + GenericType
+ * | |-+ FunctionType
+ * | |-+ StructType
+ * | |-+ TupleType
+ * | |-+ AlgebraicType
+ * | `-+ TraitType
+ * |-+ EnumType
+ * |-+ PrimitiveType
+ * |-+ ArrayType
+ * `-+ ReferenceType
+ */
 class Type {
 public:
 
